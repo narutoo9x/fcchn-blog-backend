@@ -10,12 +10,13 @@ var routes = require('./routes');
 var logger = require('./config/logger');
 var errors = require('@feathersjs/errors');
 var cors = require('cors');
-var app = express();
-
 import jwt from 'jsonwebtoken';
 import passport from 'passport';
 import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt';
 import User from './models/users.model';
+
+var app = express();
+var DATABASE_URL = process.env.CLOUD_DATABASE_URL ? process.env.CLOUD_DATABASE_URL : process.env.LOCAL_DATABASE_URL;
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
@@ -31,15 +32,15 @@ jwtOptions.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 jwtOptions.secretOrKey = 'MyS3cr3t';
 
 var strategy = new JwtStrategy(jwtOptions, function(jwt_payload, next) {
-  logger.debug('payload received', jwt_payload);
-  User.read(jwt_payload.userId)
-    .then(user => {
-      if (user) {
-        return next(null, user);
-      } else {
-        return next(null, false);
-      }
-    });
+    logger.debug('payload received', jwt_payload);
+    User.read(jwt_payload.userId)
+        .then(user => {
+            if (user) {
+                return next(null, user);
+            } else {
+                return next(null, false);
+            }
+        });
 });
 
 passport.use(strategy);
@@ -48,41 +49,41 @@ app.use('/api', routes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  var error = new errors.NotFound();
-  next(error);
+    var error = new errors.NotFound();
+    next(error);
 });
 
 // error handler
 app.use(function(err, req, res, next) {
-  logger.error(err);
-  switch(err.name) {
-    case 'CastError':
-      err = new errors.BadRequest(`Invalid ${err.path} field`);
-      break;
-    case 'NotFound':
-      err = new errors.NotFound();
-      break;
-    case 'ValidationError':
-      err = new errors.BadRequest(`${err.message.split(':')[2].trim()}`);
-      break;
-    case 'NotAuthenticated':
-      err = new errors.NotAuthenticated();
-      break;
-    default: // Internal server error
-      err = new errors.GeneralError();
-  }
+    logger.error(err);
+    switch (err.name) {
+        case 'CastError':
+            err = new errors.BadRequest(`Invalid ${err.path} field`);
+            break;
+        case 'NotFound':
+            err = new errors.NotFound();
+            break;
+        case 'ValidationError':
+            err = new errors.BadRequest(`${err.message.split(':')[2].trim()}`);
+            break;
+        case 'NotAuthenticated':
+            err = new errors.NotAuthenticated();
+            break;
+        default: // Internal server error
+            err = new errors.GeneralError();
+    }
 
-  res.status(err.code);
-  res.send(err);
+    res.status(err.code);
+    res.send(err);
 });
 
 // use ES6 native Promise instead of depricated mongoose Promise
 mongoose.Promise = Promise;
 
 // connect to mongo db
-mongoose.connect(process.env.LOCAL_DATABASE_URL).then(
-  () => { logger.info('connect to mongo successfully'); },
-  err => { logger.info('error on connect mongodb: ', err); }
+mongoose.connect(DATABASE_URL).then(
+    () => { logger.info('connect to mongo successfully'); },
+    err => { logger.info('error on connect mongodb: ', err); }
 );
 
 module.exports = app;
