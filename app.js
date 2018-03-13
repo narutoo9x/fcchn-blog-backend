@@ -1,3 +1,4 @@
+require('dotenv').config();
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
@@ -72,14 +73,14 @@ app.use(function(err, req, res, next) {
   }
 
   res.status(err.code);
-  res.send(err); 
+  res.send(err);
 });
 
 // use ES6 native Promise instead of depricated mongoose Promise
 mongoose.Promise = Promise;
 
 // connect to mongo db
-mongoose.connect('mongodb://localhost:27017/fcchn-blog').then(
+mongoose.connect(process.env.LOCAL_DATABASE_URL).then(
   () => { logger.info('connect to mongo successfully'); },
   err => { logger.info('error on connect mongodb: ', err); }
 );
