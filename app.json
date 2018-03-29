@@ -1,0 +1,18 @@
+{
+  "name": "fcchn-blog-backend",
+  "description": "",
+  "scripts": {
+  },
+  "env": {
+  },
+  "formation": {
+  },
+  "addons": [
+
+  ],
+  "buildpacks": [
+    {
+      "url": " heroku/nodejs"
+    }
+  ]
+}
